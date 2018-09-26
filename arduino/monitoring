@@ -1,0 +1,44 @@
+#include <SPI.h>
+#include <Ethernet.h>
+#include "DHT.h"
+#define DHTPIN 7
+#define DHTTYPE DHT11
+
+DHT dht(DHTPIN, DHTTYPE);
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+byte ip[] = {192, 168, 1, 181 }; //Enter the IP of ethernet shield
+byte serv[] = {192, 168, 1, 13 } ; //Enter the IPv4 address
+EthernetClient client;
+
+void setup() {
+Serial.begin(9600); //setting the baud rate at 9600
+Ethernet.begin(mac, ip);
+dht.begin();
+}
+
+void loop() {
+float hum = dht.readHumidity(); //Reading the humidity and storing in hum
+float temp = dht.readTemperature(); //Reading the temperature as Celsius and storing in temp
+
+if (client.connect(serv, 23)) { //Connecting at the IP address and port we saved before
+Serial.println("connected");
+client.print("GET /monitoring/data.php?"); //Connecting and Sending values to database
+client.print("temperature=");
+client.print(temp);
+client.print("&humidity=");
+client.println(hum);
+
+//Printing the values on the serial monitor
+Serial.print("Temperature= ");
+Serial.println(temp);
+Serial.print("Humidity= ");
+Serial.println(hum);
+
+client.stop(); //Closing the connection
+}
+else {
+// if you didn't get a connection to the server:
+Serial.println("connection failed");
+}
+delay(5000);
+}
